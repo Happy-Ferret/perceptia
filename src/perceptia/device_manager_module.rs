@@ -6,18 +6,18 @@
 // -------------------------------------------------------------------------------------------------
 
 use dharma::{InitResult, Module};
-use qualia::{Context, Perceptron};
+use qualia::{Context, Perceptron, perceptron};
 use device_manager::DeviceManager;
 
 // -------------------------------------------------------------------------------------------------
 
-pub struct DeviceManagerModule<'a> {
-    manager: Option<DeviceManager<'a>>,
+pub struct DeviceManagerModule {
+    manager: Option<DeviceManager>,
 }
 
 // -------------------------------------------------------------------------------------------------
 
-impl<'a> DeviceManagerModule<'a> {
+impl DeviceManagerModule {
     /// `DeviceManagerModule` constructor.
     pub fn new() -> Box<Module<T = Perceptron, C = Context>> {
         Box::new(DeviceManagerModule { manager: None })
@@ -26,17 +26,25 @@ impl<'a> DeviceManagerModule<'a> {
 
 // -------------------------------------------------------------------------------------------------
 
-impl<'a> Module for DeviceManagerModule<'a> {
+impl Module for DeviceManagerModule {
     type T = Perceptron;
     type C = Context;
 
     fn initialize(&mut self, context: &mut Self::C) -> InitResult {
         self.manager = Some(DeviceManager::new(context.clone()));
-        Vec::new()
+        vec![perceptron::INPUTS_CHANGED, perceptron::OUTPUTS_CHANGED]
     }
 
     // FIXME: Finnish handling signals in `DeviceManagerModule`.
-    fn execute(&mut self, package: &Self::T) {}
+    fn execute(&mut self, package: &Self::T) {
+        if let Some(ref mut manager) = self.manager {
+            match *package {
+                Perceptron::InputsChanged => manager.on_inputs_changed(),
+                Perceptron::OutputsChanged => manager.on_outputs_changed(),
+                _ => {}
+            }
+        }
+    }
 
     fn finalize(&mut self) {
         log_info1!("Finalized Device Manager module");

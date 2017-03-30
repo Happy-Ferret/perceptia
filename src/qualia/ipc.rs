@@ -114,7 +114,7 @@ struct InnerIpc {
 
 impl InnerIpc {
     /// `InnerIpc` constructor.
-    pub fn new() -> Self {
+    pub fn new() -> Self {  // XXX Option
         let connection = match Connection::get_private(BusType::System) {
             Ok(connection) => Some(connection),
             Err(_) => None,

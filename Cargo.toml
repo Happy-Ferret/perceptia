@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+        "extra/libudev-rs",
         "src/dharma",
         "src/timber",
         "src/skylane",

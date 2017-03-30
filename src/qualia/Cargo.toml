@@ -8,7 +8,7 @@ bitflags = "0.8"
 backtrace = "0.3"
 dbus = "0.5"
 libc = "0.2"
-libudev = "0.2"
+libudev = { path = "../../extra/libudev-rs" }
 nix = "0.8"
 time = "0.1"
 xkbcommon = "0.2"

@@ -7,22 +7,40 @@
 // -------------------------------------------------------------------------------------------------
 
 use std::os::unix::io;
+use std::os::unix::io::AsRawFd;
 
-use dharma::{EventHandler, EventKind};
+use libudev;
+
+use dharma::{EventHandler, EventKind, Signaler};
+use qualia::{Perceptron, perceptron};
+
+use udev;
 
 // -------------------------------------------------------------------------------------------------
 
-/// `udev` device event handled.
+/// `udev` device event handler.
 pub struct DeviceMonitor {
-    monitor_fd: io::RawFd,
+    monitor_socket: libudev::MonitorSocket,
+    signaler: Signaler<Perceptron>,
 }
 
 // -------------------------------------------------------------------------------------------------
 
+/// Make `MonitorSocket` sendable between threads.
+///
+/// FIXME: `libudev` context should be `Arc<Mutex>`'ed. Current sulution is good enough if new
+///        device is not plugged in while previous plug in event is still handled.
+unsafe impl Send for DeviceMonitor {}
+
+// -------------------------------------------------------------------------------------------------
+
 impl DeviceMonitor {
-    /// `DeviceMonitor` constructor.
-    pub fn new(fd: io::RawFd) -> Self {
-        DeviceMonitor { monitor_fd: fd }
+    /// Constructs new `DeviceMonitor`.
+    pub fn new(monitor_socket: libudev::MonitorSocket, signaler: Signaler<Perceptron>) -> Self {
+        DeviceMonitor {
+            monitor_socket: monitor_socket,
+            signaler: signaler,
+        }
     }
 }
 
@@ -31,11 +49,22 @@ impl DeviceMonitor {
 /// This code executes in main dispatchers thread.
 impl EventHandler for DeviceMonitor {
     fn get_fd(&self) -> io::RawFd {
-        self.monitor_fd
+        self.monitor_socket.as_raw_fd()
     }
 
     fn process_event(&mut self, _: EventKind) {
-        // FIXME: Implement handling of device adding and removing.
+        match self.monitor_socket.receive_event() {
+            Some(ref event) => {
+                if udev::is_input_device(event) {
+                    self.signaler.emit(perceptron::INPUTS_CHANGED, Perceptron::InputsChanged);
+                } else if udev::is_output_device(event) {
+                    self.signaler.emit(perceptron::OUTPUTS_CHANGED, Perceptron::OutputsChanged);
+                }
+            }
+            None => {
+                log_warn2!("Received empty device monitor event");
+            }
+        };
     }
 }
 

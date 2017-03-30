@@ -18,9 +18,12 @@ use defs::{Axis, Position, OptionalPosition, Vector, Button, Key};
 pub const NOTIFY: SignalId = 0;
 pub const VERTICAL_BLANK: SignalId = 1;
 pub const PAGE_FLIP: SignalId = 2;
-pub const OUTPUT_FOUND: SignalId = 3;
-pub const COMMAND: SignalId = 5;
-pub const DISPLAY_CREATED: SignalId = 6;
+pub const OUTPUTS_CHANGED: SignalId = 3;
+pub const OUTPUT_FOUND: SignalId = 4;
+pub const OUTPUT_LOST: SignalId = 5;
+pub const INPUTS_CHANGED: SignalId = 6;
+pub const INPUT_FOUND: SignalId = 7;
+pub const INPUT_LOST: SignalId = 8;
 pub const INPUT_POINTER_MOTION: SignalId = 10;
 pub const INPUT_POINTER_POSITION: SignalId = 11;
 pub const INPUT_POINTER_BUTTON: SignalId = 12;
@@ -35,6 +38,9 @@ pub const SURFACE_FRAME: SignalId = 30;
 pub const POINTER_FOCUS_CHANGED: SignalId = 31;
 pub const POINTER_RELATIVE_MOTION: SignalId = 32;
 pub const KEYBOARD_FOCUS_CHANGED: SignalId = 33;
+pub const COMMAND: SignalId = 40;
+pub const DISPLAY_CREATED: SignalId = 41;
+pub const DISPLAY_DESTROYED: SignalId = 42;
 
 // -------------------------------------------------------------------------------------------------
 
@@ -48,9 +54,12 @@ pub enum Perceptron {
     CustomId(u64),
     VerticalBlank(i32),
     PageFlip(i32),
+    OutputsChanged, // XXX
     OutputFound(DrmBundle),
-    Command(Command),
-    DisplayCreated(OutputInfo),
+    OutputLost, // XXX
+    InputsChanged,
+    InputFound,
+    InputLost,
     InputPointerMotion(Vector),
     InputPointerPosition(OptionalPosition),
     InputPointerButton(Button),
@@ -65,6 +74,9 @@ pub enum Perceptron {
     PointerFocusChanged(SurfaceId, SurfaceId, Position),
     PointerRelativeMotion(SurfaceId, Position, Milliseconds),
     KeyboardFocusChanged(SurfaceId, SurfaceId),
+    Command(Command),
+    DisplayCreated(OutputInfo),
+    DisplayDestroyed,
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -77,9 +89,12 @@ impl std::fmt::Display for Perceptron {
             Perceptron::CustomId(ref id) => write!(f, "CustomId({:?})", id),
             Perceptron::VerticalBlank(ref data) => write!(f, "VerticalBlank({:?})", data),
             Perceptron::PageFlip(ref data) => write!(f, "PageFlip({:?})", data),
+            Perceptron::OutputsChanged => write!(f, "OutputsChanged"),
             Perceptron::OutputFound(ref bundle) => write!(f, "OutputFound({:?})", bundle),
-            Perceptron::Command(ref command) => write!(f, "Command({:?})", command),
-            Perceptron::DisplayCreated(ref info) => write!(f, "DisplayCreated({:?})", info),
+            Perceptron::OutputLost => write!(f, "OutputLost"),
+            Perceptron::InputsChanged => write!(f, "InputsChanged"),
+            Perceptron::InputFound => write!(f, "InputFound"),
+            Perceptron::InputLost => write!(f, "InputLost"),
             Perceptron::InputPointerMotion(ref vector) => {
                 write!(f, "InputPointerMotion({:?})", vector)
             }
@@ -108,6 +123,9 @@ impl std::fmt::Display for Perceptron {
             Perceptron::KeyboardFocusChanged(ref old_sid, ref new_sid) => {
                 write!(f, "KeyboardFocusChanged({:?}, {:?})", old_sid, new_sid)
             }
+            Perceptron::Command(ref command) => write!(f, "Command({:?})", command),
+            Perceptron::DisplayCreated(ref info) => write!(f, "DisplayCreated({:?})", info),
+            Perceptron::DisplayDestroyed => write!(f, "DisplayDestroyed"),
         }
     }
 }

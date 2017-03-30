@@ -5,7 +5,7 @@
 
 // -------------------------------------------------------------------------------------------------
 
-use dharma::{Dispatcher, EventHandler, EventKind, Signaler, SignalId};
+use dharma::{Dispatcher, EventHandler, EventHandlerId, EventKind, Signaler, SignalId};
 
 use config::Config;
 use settings::Settings;
@@ -29,7 +29,7 @@ pub struct Context {
 // -------------------------------------------------------------------------------------------------
 
 impl Context {
-    /// Context constructor.
+    /// Constructs new `Context`.
     pub fn new(config: Config,
                settings: Settings,
                signaler: Signaler<Perceptron>,
@@ -47,44 +47,50 @@ impl Context {
         }
     }
 
-    /// Emit signal with given `id` and `package` data.
+    /// Emits signal with given `id` and `package` data.
     pub fn emit(&mut self, id: SignalId, package: Perceptron) {
         self.signaler.emit(id, package);
     }
 
-    /// Add new event handler.
+    /// Adds new event handler.
     pub fn add_event_handler(&mut self,
                              event_handler: Box<EventHandler + Send>,
-                             event_kind: EventKind) {
-        self.dispatcher.add_source(event_handler, event_kind);
+                             event_kind: EventKind)
+                             -> EventHandlerId {
+        self.dispatcher.add_source(event_handler, event_kind)
     }
 
-    /// Get global configuration.
+    /// Removes given event handler.
+    pub fn remove_event_handler(&mut self, event_handler_id: EventHandlerId) {
+        self.dispatcher.delete_source(event_handler_id);
+    }
+
+    /// Returns global configuration.
     pub fn get_config(&self) -> &Config {
         &self.config
     }
 
-    /// Get global settings.
+    /// Returns global settings.
     pub fn get_settings(&self) -> &Settings {
         &self.settings
     }
 
-    /// Get reference to `Signaler`.
+    /// Returns reference to `Signaler`.
     pub fn get_signaler(&mut self) -> &mut Signaler<Perceptron> {
         &mut self.signaler
     }
 
-    /// Get reference to `Dispatcher`.
+    /// Returns reference to `Dispatcher`.
     pub fn get_dispatcher(&mut self) -> &mut Dispatcher {
         &mut self.dispatcher
     }
 
-    /// Get reference to `Coordinator`.
+    /// Returns reference to `Coordinator`.
     pub fn get_coordinator(&mut self) -> &mut Coordinator {
         &mut self.coordinator
     }
 
-    /// Get reference to `InputManager`.
+    /// Returns reference to `InputManager`.
     pub fn get_input_manager(&mut self) -> &mut InputManager {
         &mut self.input_manager
     }

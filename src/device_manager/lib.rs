@@ -14,11 +14,16 @@ extern crate timber;
 extern crate qualia;
 extern crate dharma;
 
+mod device_access;
+
 mod input_gateway;
 mod evdev;
 mod drivers;
+mod input_collector;
+
 mod pageflip;
 mod output_collector;
+
 mod device_monitor;
 
 pub mod udev;
